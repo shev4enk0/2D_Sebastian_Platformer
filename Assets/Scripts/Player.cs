@@ -19,7 +19,7 @@ public class Player : MonoBehaviour
     {
         var inputDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
         velosity.x = inputDirection.x * speed * Time.deltaTime;
-        velosity.y += gravity * Time.deltaTime;
+        velosity.y = gravity * Time.deltaTime;
 //        print(velosity);
         controller.Move(velosity);
     }
