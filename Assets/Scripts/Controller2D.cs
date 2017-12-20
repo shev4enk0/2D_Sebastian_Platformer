@@ -2,14 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.EventSystems;
 
 [RequireComponent(typeof(Player))]
 public class Controller2D : MonoBehaviour
 {
     public float skinWidth = Mathf.Epsilon;
-    public LayerMask collisionMaskLayer;
+
     public int horizontalRayCount = 4;
     public int verticalRayCount = 4;
+
+    public LayerMask collisionMaskLayer;
+    public CollisionInfo collisionInfo;
 
     float horizontalRaySpasing;
     float verticalRaySpasing;
@@ -17,6 +21,17 @@ public class Controller2D : MonoBehaviour
     struct RaycastOrigins
     {
         public  Vector2 topLeft, topRight, bottomLeft, bottomRight;
+
+    }
+
+    public struct CollisionInfo
+    {
+        public bool above, below, left, right;
+
+        public void Reset()
+        {
+            above = below = left = right = false;
+        }
 
     }
 
@@ -40,8 +55,6 @@ public class Controller2D : MonoBehaviour
         raycastOrigins.bottomRight = new Vector2(bounds.max.x, bounds.min.y);
         raycastOrigins.topLeft = new Vector2(bounds.min.x, bounds.max.y);
         raycastOrigins.topRight = new Vector2(bounds.max.x, bounds.max.y);
-
-
     }
 
     void CalculateRaySpasing()
@@ -67,13 +80,14 @@ public class Controller2D : MonoBehaviour
 
             rayOrigin += Vector2.right * (verticalRaySpasing * i);//+velosity.x
 
-            Debug.DrawRay(rayOrigin, Vector2.up * direction, Color.yellow);
+//            Debug.DrawRay(rayOrigin, Vector2.up * direction, Color.yellow);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.up * direction, lengthRay, collisionMaskLayer);
 
             if (hit)
             {
                 velocity.y = (hit.distance - skinWidth) * direction;
-//                print(hit.distance); 
+                collisionInfo.below = direction == -1;
+                collisionInfo.above = direction == 1;
             }
         }
             
@@ -89,21 +103,23 @@ public class Controller2D : MonoBehaviour
             var rayOrigin = (direction == -1) ? raycastOrigins.bottomLeft : raycastOrigins.bottomRight;
 
             rayOrigin += Vector2.up * (horizontalRaySpasing * i);
-            Debug.DrawRay(rayOrigin, Vector2.right * direction * lengthRay, Color.yellow);
+//            Debug.DrawRay(rayOrigin, Vector2.right * direction * lengthRay, Color.yellow);
             RaycastHit2D hit = Physics2D.Raycast(rayOrigin, Vector2.right * direction, lengthRay, collisionMaskLayer);
             if (hit)
             {
                 velocity.x = (hit.distance - skinWidth) * direction;
+                collisionInfo.left = direction == -1;
+                collisionInfo.right = direction == 1;
             }
-
-           
         }
-
     }
+
+   
 
     public void Move(Vector2 velosity)
     {
         UpdateRaycastOrigins();
+        collisionInfo.Reset();
         if (velosity.y != 0)
             VerticalCollisions(ref  velosity);
         if (velosity.x != 0)
